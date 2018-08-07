@@ -1,4 +1,4 @@
-The PedCarMDP.jl package is licensed under the MIT "Expat" License:
+The PedCar.jl package is licensed under the MIT "Expat" License:
 
 > Copyright (c) 2018: MaximeBouton.
 >

@@ -1,4 +1,4 @@
-# PedCarMDP
+# PedCar
 
 [![Build Status](https://travis-ci.org/MaximeBouton/PedCarMDP.jl.svg?branch=master)](https://travis-ci.org/MaximeBouton/PedCarMDP.jl)
 
