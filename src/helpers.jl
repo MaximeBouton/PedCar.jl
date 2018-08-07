@@ -1,5 +1,5 @@
 function crash(mdp::PedCarMDP, s::PedCarMDPState)
-    return crash(mdp, s.ego, s.car, s.ped)
+    return crash(mdp, s.ego, s.ped, s.car)
 end
 
 function crash(mdp::PedCarMDP, ego::VehicleState, ped::VehicleState, car::VehicleState)
@@ -11,7 +11,7 @@ function POMDPs.discount(mdp::PedCarMDP)
 end
 
 function POMDPs.isterminal(mdp::PedCarMDP, s::PedCarMDPState)
-    if crash(mdp, s)
+    if s.crash
         return true
     elseif s.ego.posF.s >= get_end(mdp.env.roadway[mdp.ego_goal]) &&
        get_lane(mdp.env.roadway, s.ego).tag == mdp.ego_goal

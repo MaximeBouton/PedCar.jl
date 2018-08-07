@@ -1,8 +1,7 @@
 function POMDPs.reward(mdp::PedCarMDP, s::PedCarMDPState, a::PedCarMDPAction, sp::PedCarMDPState)
     r = mdp.action_cost
     ego = sp.ego
-    collision = crash(mdp, ego, sp.ped, sp.car)
-    if collision 
+    if sp.crash 
         r += mdp.collision_cost
     end
     if ego.posF.s >= get_end(mdp.env.roadway[mdp.ego_goal]) &&

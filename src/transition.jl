@@ -20,8 +20,8 @@ function POMDPs.transition(mdp::PedCarMDP, s::PedCarMDPState, a::PedCarMDPAction
         for (car_route, pcar) in weighted_iterator(car_dist)
             car, route = car_route
             for (ped, pped) in weighted_iterator(ped_dist)
-                # collision = crash(mdp, ego, ped, car)
-                collision = false
+                collision = crash(mdp, ego, ped, car)
+                # collision = false
                 # collision = mdp._collision_checker[(ego, ped, car)]
                 states[l] = PedCarMDPState(collision, ego, ped, car, route)
                 probs[l] = pego*pcar*pped
