@@ -11,7 +11,7 @@ function POMDPs.discount(mdp::PedCarMDP)
 end
 
 function POMDPs.isterminal(mdp::PedCarMDP, s::PedCarMDPState)
-    if s.crash
+    if crash(mdp, s)
         return true
     elseif s.ego.posF.s >= get_end(mdp.env.roadway[mdp.ego_goal]) &&
        get_lane(mdp.env.roadway, s.ego).tag == mdp.ego_goal

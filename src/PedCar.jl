@@ -13,6 +13,7 @@ using GridInterpolations
 using POMDPs
 using POMDPToolbox
 using AutomotiveDrivingModels
+using AutoViz
 using AutomotivePOMDPs
 using Parameters
 
@@ -34,7 +35,8 @@ export
     crash,
     ind2state,
     init_transition!,
-    init_collision_checker!
+    init_collision_checker!,
+    animate_states
 
 include("mdp_type.jl")
 include("spaces.jl")
@@ -43,5 +45,6 @@ include("driver_models_helpers.jl")
 include("transition.jl")
 include("helpers.jl")
 include("reward.jl")
+include("render_helpers.jl")
 
 end # module

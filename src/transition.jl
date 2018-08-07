@@ -25,6 +25,7 @@ function POMDPs.transition(mdp::PedCarMDP, s::PedCarMDPState, a::PedCarMDPAction
                 # collision = mdp._collision_checker[(ego, ped, car)]
                 states[l] = PedCarMDPState(collision, ego, ped, car, route)
                 probs[l] = pego*pcar*pped
+                l += 1
             end
         end
     end
@@ -99,7 +100,8 @@ function car_transition(mdp::PedCarMDP)
                 car_transition_dict[(car, car_route, LonAccelDirection(a, dir))] = SparseCat(car_states, car_probs)
             end
         end
-    end
+        car_transition_dict[(mdp.off_grid, car_route, LonAccelDirection(0., 0))] = car_reset(mdp)
+    end # end route
     car_transition_dict[(mdp.off_grid, OFF_ROUTE, LonAccelDirection(0., 0))] = car_reset(mdp)
     return car_transition_dict
 end
@@ -114,8 +116,8 @@ function ped_transition(mdp::PedCarMDP)
     for ped in ped_states 
         for a in ped_action_space
             acts_ped = SVector(ConstantSpeedDawdling(0., 0.), ConstantSpeedDawdling(1., 0.), ConstantSpeedDawdling(2., 0.))
-            ped_states = Vector{VehicleState}(N_NEXT)
-            ped_probs = Vector{Float64}(N_NEXT)
+            ped_states = Vector{VehicleState}()
+            ped_probs = Vector{Float64}()
             k = 1
             p_a = 1/length(acts_ped) # uniform
             for act in acts_ped
@@ -145,15 +147,15 @@ end
 function ego_interpolation(mdp::PedCarMDP, grids::Dict{LaneTag, RectangleGrid{2}}, ego::VehicleState)
     N_itp = 4
     itp_car_ps, itp_car_weights = interpolate_state(mdp, ego)
-    states_ = Vector{VehicleState}(N_itp)
-    probs_ = Vector{Float64}(N_itp)
-    fill!(states_, itp_car_ps[1])
-    fill!(probs_, itp_car_weights[1]/(N_itp - length(itp_car_ps)+1))
-    for i=2:length(itp_car_ps)
-        states_[i] = itp_car_ps[i]
-        probs_[i] = itp_car_weights[i]
-    end
-    normalize!(probs_, 1)
+    # states_ = Vector{VehicleState}(N_itp)
+    # probs_ = Vector{Float64}(N_itp)
+    # fill!(states_, itp_car_ps[1])
+    # fill!(probs_, itp_car_weights[1]/(N_itp - length(itp_car_ps)+1))
+    # for i=2:length(itp_car_ps)
+    #     states_[i] = itp_car_ps[i]
+    #     probs_[i] = itp_car_weights[i]
+    # end
+    # normalize!(probs_, 1)
     return itp_car_ps, itp_car_weights
 end
 
@@ -187,7 +189,8 @@ end
 
 function ped_interpolation(mdp::PedCarMDP, grids::Dict{LaneTag, RectangleGrid{3}}, ped::VehicleState)
     N_itp = 4
-    if ped.posG == mdp.off_grid.posG
+    if ped.posG == mdp.off_grid.posG || (ped.posF.s >= get_end(get_lane(mdp.env.roadway, ped)) && isapprox(ped.posF.ϕ, 0.)) ||
+               (isapprox(ped.posF.s, 0., atol=0.01) && isapprox(ped.posF.ϕ, float(pi)))
         states = SVector{N_itp}(fill(mdp.off_grid, N_itp))
         probs = SVector{N_itp}(fill(1.0/N_itp, N_itp))
         return [mdp.off_grid], [1.0]
