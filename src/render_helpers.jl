@@ -1,7 +1,7 @@
 """
 convert to AutomotiveDrivingModels.Scene
 """
-function state2scene(mdp::PedCarMDP, s::PedCarMDPState, ped_type::VehicleDef = mdp.ped_type)
+function AutomotivePOMDPs.state2scene(mdp::PedCarMDP, s::PedCarMDPState, ped_type::VehicleDef = mdp.ped_type)
     scene = Scene()
     push!(scene, Vehicle(s.ego, mdp.ego_type, EGO_ID))
     push!(scene, Vehicle(s.car, mdp.ego_type, CAR_ID))

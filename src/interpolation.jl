@@ -41,7 +41,7 @@ function init_v_grid(env::UrbanEnv, vel_res::Float64)
 end
 
 # a bunch of interpolation helpers
-function interpolate_state(mdp::PedCarMDP, state::VehicleState)
+function AutomotivePOMDPs.interpolate_state(mdp::PedCarMDP, state::VehicleState)
     # interpolate longitudinal position and velocity
     if state.posG == mdp.off_grid
         return VehicleState[state], Float64[1.0]
@@ -63,7 +63,7 @@ function interpolate_state(mdp::PedCarMDP, state::VehicleState)
 end
 
 # take into account heading as well
-function interpolate_pedestrian(mdp::PedCarMDP, state::VehicleState)
+function AutomotivePOMDPs.interpolate_pedestrian(mdp::PedCarMDP, state::VehicleState)
     # interpolate longitudinal position and velocity
     if state.posG == mdp.off_grid
         return (state,), (1.0,)

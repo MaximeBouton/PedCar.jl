@@ -36,7 +36,8 @@ export
     ind2state,
     init_transition!,
     init_collision_checker!,
-    animate_states
+    animate_states,
+    state2scene
 
 include("mdp_type.jl")
 include("spaces.jl")

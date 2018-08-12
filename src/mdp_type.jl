@@ -25,6 +25,11 @@ struct PedCarMDPState
     route::SVector{2, LaneTag}
 end
 
+function Base.:(==)(v1::VehicleState, v2::VehicleState)
+    return v1.posF == v2.posF && v1.v == v2.v 
+end
+Base.hash(veh::VehicleState, h::UInt) = hash(veh.posF, hash(veh.v, h))
+
 # copy b to a
 function Base.copy!(a::PedCarMDPState, b::PedCarMDPState)
     a.crash = b.crash
