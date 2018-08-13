@@ -29,6 +29,7 @@ function POMDPs.transition(mdp::PedCarMDP, s::PedCarMDPState, a::PedCarMDPAction
             end
         end
     end
+    normalize!(probs, 1)
     return SparseCat(states, probs)::SparseCat{Vector{PedCarMDPState}, Vector{Float64}}
 end
 
