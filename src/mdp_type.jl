@@ -26,7 +26,7 @@ struct PedCarMDPState
 end
 
 function Base.:(==)(v1::VehicleState, v2::VehicleState)
-    return v1.posF == v2.posF && v1.v == v2.v 
+    return v1.posG == v2.posG && v1.v == v2.v 
 end
 Base.hash(veh::VehicleState, h::UInt) = hash(veh.posF, hash(veh.v, h))
 
@@ -71,7 +71,7 @@ const EgoTransitionDict = Dict{Tuple{VehicleState, LonAccelDirection}, SparseCat
     vel_ped_res::Float64 = 1.0
     car_action_space::Vector{Float64} = collect(-9.0:1.0:4.0)
     ped_action_space::Vector{Float64} = collect(0.0:1.0:2.0)
-    car_models::Dict{SVector{2, LaneTag}, DriverModel} = get_car_models(env, get_stop_model)
+    car_models::Dict{SVector{2, LaneTag}, DriverModel} = get_car_models(env, get_ttc_model)
     car_type::VehicleDef = VehicleDef()
     ego_type::VehicleDef = VehicleDef()
     ped_type::VehicleDef = VehicleDef(AgentClass.PEDESTRIAN, 1.0, 1.0)

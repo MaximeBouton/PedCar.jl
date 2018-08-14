@@ -37,7 +37,8 @@ export
     init_transition!,
     init_collision_checker!,
     animate_states,
-    state2scene
+    state2scene,
+    get_mdp_state
 
 include("mdp_type.jl")
 include("spaces.jl")

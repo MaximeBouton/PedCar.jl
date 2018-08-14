@@ -24,7 +24,7 @@ function POMDPs.states(mdp::PedCarMDP)
             for ped in ped_states
                 car_states = get_car_states(mdp.env, route, mdp.pos_res, mdp.vel_res)
                 for car in car_states
-                    collision = crash(mdp, ego, car, ped)
+                    collision = crash(mdp, ego, ped, car)
                     # enumerate all possible routes
                     lane = get_lane(mdp.env.roadway, car)
                     push!(state_space, PedCarMDPState(collision, ego, ped, car, SVector{2, LaneTag}(route[1], route[end])))
@@ -61,7 +61,7 @@ function POMDPs.state_index(mdp::PedCarMDP, s::PedCarMDPState)
     # step 1: find ego_index
     ego_i = ego_state_index(mdp.env, s.ego, mdp.pos_res, mdp.vel_res)
     # step 2: find ped index 
-    if s.ped.posG == mdp.off_grid
+    if s.ped == mdp.off_grid
         ped_i = n_ped + 1
     else
         ped_i = ped_state_index(mdp.env, s.ped, mdp.pos_res, mdp.vel_ped_res)
@@ -76,7 +76,7 @@ function POMDPs.state_index(mdp::PedCarMDP, s::PedCarMDPState)
     end
 
     # handle off the grid case
-    if s.car.posG == mdp.off_grid || s.route == [LaneTag(0, 0), LaneTag(0, 0)]
+    if s.car == mdp.off_grid || s.route == OFF_ROUTE
         si = 0
         for route in routes
             si += n_ego * (n_ped + 1) * n_car_states(mdp.env, route, mdp.pos_res, mdp.vel_res)
@@ -135,7 +135,7 @@ function ind2state(mdp::PedCarMDP, si::Int64)
         else
             ped = ind2ped(mdp.env, ped_i, mdp.pos_res, mdp.vel_ped_res)
         end
-        collision = crash(mdp, ego, car, ped)
+        collision = crash(mdp, ego, ped, car)
         return PedCarMDPState(collision, ego, ped, car, SVector{2, LaneTag}(LaneTag(0,0), LaneTag(0, 0)))
     else
         si_ = si - route_shift
@@ -151,7 +151,7 @@ function ind2state(mdp::PedCarMDP, si::Int64)
         else
             ped = ind2ped(mdp.env, ped_i, mdp.pos_res, mdp.vel_ped_res)
         end
-        collision = crash(mdp, ego, car, ped)
+        collision = crash(mdp, ego, ped, car)
         return PedCarMDPState(collision, ego, ped, car, sroute)
     end
 end

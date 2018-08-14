@@ -71,12 +71,12 @@ function get_ttc_model(env::UrbanEnv, r::SVector{2, LaneTag})
     navigator = RouteFollowingIDM(route=route, a_max=2., σ=1.)
     intersection_driver = TTCIntersectionDriver(navigator = navigator,
                                             intersection = intersection,
-                                            intersection_pos = VecSE2(mdp.env.params.inter_x,
-                                                                        mdp.env.params.inter_y),
-                                            stop_delta = maximum(mdp.env.params.crosswalk_width),
+                                            intersection_pos = VecSE2(env.params.inter_x,
+                                                                      env.params.inter_y),
+                                            stop_delta = maximum(env.params.crosswalk_width),
                                             accel_tol = 0.,
-                                            priorities = mdp.env.priorities,
-                                            ttc_threshold = (mdp.env.params.x_max - mdp.env.params.inter_x)/mdp.env.params.speed_limit
+                                            priorities = env.priorities,
+                                            ttc_threshold = (env.params.x_max - env.params.inter_x)/env.params.speed_limit
                                             )
     crosswalk_drivers = Vector{CrosswalkDriver}(length(env.crosswalks))
     for i=1:length(env.crosswalks)
@@ -101,7 +101,7 @@ function AutomotiveDrivingModels.observe!(model::UrbanDriver,
                                           ped::VehicleState,
                                           roadway::Roadway)
     AutomotiveDrivingModels.observe!(model.navigator, ego, car, roadway)
-    
+    # AutomotiveDrivingModels.observe!(model.intersection_driver, ego, car, roadway)
     for driver in model.crosswalk_drivers
         AutomotiveDrivingModels.observe!(driver, ego, car, ped, roadway)
     end
@@ -119,7 +119,16 @@ function AutomotiveDrivingModels.observe!(model::TTCIntersectionDriver,
                                           roadway::Roadway)
 
     model.priority = ttc_check(model, car, ego, roadway)
-    
+    passed = has_passed(model, car, ego, roadway)
+    a_lon_idm = model.navigator.a
+    if !model.priority && !passed && engaged(model, car, ego, roadway) 
+        a_lon = -model.navigator.d_max
+    elseif !model.priority && !passed
+        a_lon = min(a_lon_idm, AutomotivePOMDPs.stop_at_end(model, car, roadway))
+    else
+        a_lon = a_lon_idm
+    end
+    model.a = LonAccelDirection(a_lon, model.navigator.dir)    
 end
 
 function AutomotiveDrivingModels.observe!(model::CrosswalkDriver, 
@@ -184,14 +193,14 @@ function is_crossing(ped::VehicleState, crosswalk::Lane, conflict_lanes::Vector{
 end
 
 function ttc_check(model::TTCIntersectionDriver, ego::VehicleState, car::VehicleState, roadway::Roadway)
-    posF = car.state.posF
+    inter_width=6.0
+    posF = car.posF
     int_x, int_y, int_θ = model.intersection_pos
-    lane = get_lane(roadway, car)
-    int_proj = Frenet(model.intersection_pos, lane, roadway)
-    if normsquared(VecE2(model.intersection_pos - car.state.posG)) < inter_width^2 # vehicle is in the middle
+    Δ = (model.intersection_pos.x - car.posG.x)^2 + (model.intersection_pos.y - car.posG.y)^2
+    if Δ < inter_width^2 # vehicle is in the middle
         ttc = 0.
     else
-        ttc = (int_proj.s - posF.s)/car.state.v
+        ttc = sqrt(Δ)/car.v
     end
 
     if 0 <= ttc < model.ttc_threshold
@@ -200,6 +209,22 @@ function ttc_check(model::TTCIntersectionDriver, ego::VehicleState, car::Vehicle
         return true
     end
 
+end
+
+function has_passed(model::TTCIntersectionDriver, ego::VehicleState, car::VehicleState, roadway::Roadway)
+    lane = get_lane(roadway, ego)
+    inter_to_car = ego.posG - model.intersection_pos
+    car_vec = ego.posG + polar(VehicleDef().length/2, ego.posG.θ) - ego.posG
+    has_passed = dot(inter_to_car, car_vec) > 0. || isempty(lane.exits)
+    return has_passed
+end
+
+function engaged(model::TTCIntersectionDriver, ego::VehicleState, car::VehicleState, roadway::Roadway)
+    lane = get_lane(roadway, ego)
+    if isempty(lane.entrances)
+        return false 
+    end
+    return true 
 end
 
 function is_neighbor_fore_along_lane(ego::VehicleState, car::VehicleState, roadway::Roadway, ego_def::VehicleDef = VehicleDef())
