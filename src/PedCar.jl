@@ -12,9 +12,11 @@ using StaticArrays
 using GridInterpolations
 using POMDPs
 using POMDPToolbox
+using ParticleFilters
 using AutomotiveDrivingModels
 using AutoViz
 using AutomotivePOMDPs
+using AutomotiveSensors
 using Parameters
 
 export
@@ -48,5 +50,15 @@ include("transition.jl")
 include("helpers.jl")
 include("reward.jl")
 include("render_helpers.jl")
+
+export
+    init_car_belief,
+    init_ped_belief,
+    ParticleOverlay,
+    CarState,
+    CarStateEstimator,
+    PedStateEstimator
+
+include("belief_updater.jl")
 
 end # module

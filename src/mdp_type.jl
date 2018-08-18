@@ -49,8 +49,8 @@ end
 
 # Action type
 const PedCarMDPAction = UrbanAction
-
 const CarRoute = SVector{2, LaneTag}
+const CarState = Tuple{VehicleState, CarRoute}
 const OFF_ROUTE = SVector{2, LaneTag}(LaneTag(0,0), LaneTag(0,0))
 const N_NEXT = 12
 const N_CAR_START = 12 # for v_res=2.0, had to hardcode for performance

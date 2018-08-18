@@ -101,7 +101,7 @@ function AutomotiveDrivingModels.observe!(model::UrbanDriver,
                                           ped::VehicleState,
                                           roadway::Roadway)
     AutomotiveDrivingModels.observe!(model.navigator, ego, car, roadway)
-    # AutomotiveDrivingModels.observe!(model.intersection_driver, ego, car, roadway)
+    AutomotiveDrivingModels.observe!(model.intersection_driver, ego, car, roadway)
     for driver in model.crosswalk_drivers
         AutomotiveDrivingModels.observe!(driver, ego, car, ped, roadway)
     end
