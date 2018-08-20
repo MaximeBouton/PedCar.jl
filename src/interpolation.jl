@@ -43,7 +43,7 @@ end
 # a bunch of interpolation helpers
 function AutomotivePOMDPs.interpolate_state(mdp::PedCarMDP, state::VehicleState)
     # interpolate longitudinal position and velocity
-    if state.posG == mdp.off_grid
+    if state == mdp.off_grid
         return VehicleState[state], Float64[1.0]
     end
     lane = get_lane(mdp.env.roadway, state)
@@ -65,7 +65,7 @@ end
 # take into account heading as well
 function AutomotivePOMDPs.interpolate_pedestrian(mdp::PedCarMDP, state::VehicleState)
     # interpolate longitudinal position and velocity
-    if state.posG == mdp.off_grid
+    if state == mdp.off_grid
         return (state,), (1.0,)
     end
     lane = get_lane(mdp.env.ped_roadway, state)
@@ -138,7 +138,7 @@ function AutomotivePOMDPs.get_mdp_state(mdp::PedCarMDP, pomdp::UrbanPOMDP, s::Sc
         sroute = OFF_ROUTE
     end
     e_state = VehicleState(ego.state.posG, car_roadway(mdp.env), ego.state.v)
-    p_state = VehicleState(ped.state.posG, mdp.env.ped_roadway, ped.state.v)
+    p_state = VehicleState(ped.state.posG, ped.state.posF, ped.state.v)
     c_state = VehicleState(car.state.posG, car_roadway(mdp.env), car.state.v)
     return PedCarMDPState(is_colliding(ego, car), e_state, p_state, c_state, sroute)
 end
