@@ -28,6 +28,9 @@ end
 function Base.:(==)(v1::VehicleState, v2::VehicleState)
     return v1.posG == v2.posG && v1.v == v2.v 
 end
+function Base.isapprox(v1::VehicleState, v2::VehicleState)
+    return v1.posG ≈ v2.posG && v1.v ≈ v2.v 
+end
 Base.hash(veh::VehicleState, h::UInt) = hash(veh.posF, hash(veh.v, h))
 
 # copy b to a
@@ -59,6 +62,10 @@ const CarTransitionDict = Dict{Tuple{VehicleState, CarRoute, LonAccelDirection},
 const PedTransitionDict = Dict{Tuple{VehicleState, ConstantSpeedDawdling}, SparseCat{Vector{VehicleState}, Vector{Float64}}}
 const EgoTransitionDict = Dict{Tuple{VehicleState, LonAccelDirection}, SparseCat{Vector{VehicleState}, Vector{Float64}}}
 
+"""
+    PedCarMDP
+Implementation of a driving scenario involving three agents (an ego vehicle, another car and a pedestrian) at a T-shape intersections.
+"""
 @with_kw mutable struct PedCarMDP <: MDP{PedCarMDPState, PedCarMDPAction}
     env::UrbanEnv = UrbanEnv(params=UrbanParams(nlanes_main=1,
                 crosswalk_pos =  [VecSE2(6, 0., pi/2), VecSE2(-6, 0., pi/2), VecSE2(0., -5., 0.)],
