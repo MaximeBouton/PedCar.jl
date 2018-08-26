@@ -30,13 +30,11 @@ function ParticleFilters.obs_weight(model::CarStateEstimator, s::CarState, sp::C
         obs = o[car_ind].state
     end
     if car == model.mdp.off_grid
-        weight = AutomotiveSensors.obs_weight(model.sensor, model.ego.state, obs, nothing, model.mdp.env)
+        weight = AutomotiveSensors.obs_weight(model.sensor, model.ego.state, obs, nothing, model.mdp.env.obstacles)
     else
-        weight = AutomotiveSensors.obs_weight(model.sensor, model.ego.state, obs, car, model.mdp.env)
+        weight = AutomotiveSensors.obs_weight(model.sensor, model.ego.state, obs, car, model.mdp.env.obstacles)
     end
 end
-
-
 
 function init_car_belief(mdp::PedCarMDP, n_particles::Int64, rng::AbstractRNG)
     routes = get_car_routes(mdp.env)
@@ -67,9 +65,9 @@ function ParticleFilters.obs_weight(model::PedStateEstimator, ped::VehicleState,
         obs = o[ped_ind].state
     end
     if ped == model.mdp.off_grid
-        weight = AutomotiveSensors.obs_weight(model.sensor, model.ego.state, obs, nothing, model.mdp.env)
+        weight = AutomotiveSensors.obs_weight(model.sensor, model.ego.state, obs, nothing, model.mdp.env.obstacles)
     else
-        weight = AutomotiveSensors.obs_weight(model.sensor, model.ego.state, obs, ped, model.mdp.env)
+        weight = AutomotiveSensors.obs_weight(model.sensor, model.ego.state, obs, ped, model.mdp.env.obstacles)
     end
 end
 
