@@ -97,7 +97,7 @@ end
 
 @with_kw mutable struct ParticleOverlay{S <: Union{CarState, VehicleState}} <: SceneOverlay
     mdp::PedCarMDP = PedCarMDP()
-    b::ParticleCollection{S} = ParticleCollection(Vector{S}())
+    b::ParticleCollection{S} = ParticleCollection(Vector{S}(undef, 0))
     n_render::Int64 = 100
     rng::AbstractRNG = MersenneTwister(1)
     color::Colorant = RGBA(0.976, 0.592, 0.122, 0.15) # orange

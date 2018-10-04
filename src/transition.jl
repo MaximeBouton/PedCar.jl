@@ -13,8 +13,8 @@ function POMDPs.transition(mdp::PedCarMDP, s::PedCarMDPState, a::PedCarMDPAction
     ped_dist = mdp._ped_transition_dict[(s.ped, ConstantSpeedDawdling(0., 0))]
     # merge the distribution
     n_next = length(ego_dist.vals)*length(car_dist.vals)*length(ped_dist.vals)
-    states = Vector{PedCarMDPState}(n_next)
-    probs = Vector{Float64}(n_next)
+    states = Vector{PedCarMDPState}(undef, n_next)
+    probs = Vector{Float64}(undef, n_next)
     l = 1
     for (ego, pego) in weighted_iterator(ego_dist)
         for (car_route, pcar) in weighted_iterator(car_dist)
@@ -76,8 +76,8 @@ function car_transition(mdp::PedCarMDP)
         car_states = get_car_states(env, route, pos_res, vel_res)
         for car in car_states 
             for a in car_action_space
-                car_states = Vector{Tuple{VehicleState, CarRoute}}()
-                car_probs = Vector{Float64}()
+                car_states = Vector{Tuple{VehicleState, CarRoute}}(undef, 0)
+                car_probs = Vector{Float64}(undef, 0)
                 k = 1
                 lane = get_lane(env.roadway, car)
                 dir = get_direction(lane, [env.roadway[l] for l in route])
@@ -86,13 +86,13 @@ function car_transition(mdp::PedCarMDP)
                     car_p = propagate(car, act, env.roadway, mdp.ΔT)
                     itp_car_ps, itp_car_weights = car_interpolation(mdp, mdp._car_grid, car_p)
                     for (j, car_pss) in enumerate(itp_car_ps)
-                        index_itp_state = find(x -> x==(car_pss, car_route), car_states)
+                        index_itp_state = findall(x -> x==(car_pss, car_route), car_states)
                         if !(itp_car_weights[j] ≈ 0.)
                             if isempty(index_itp_state)
                                 push!(car_states, (car_pss, car_route))
                                 push!(car_probs, itp_car_weights[j]*1/length(acts_car))
                             else
-                                car_probs[index_itp_state] += itp_car_weights[j]*1/length(acts_car)
+                                car_probs[index_itp_state] .+= itp_car_weights[j]*1/length(acts_car)
                             end
                         end
                     end
@@ -117,21 +117,21 @@ function ped_transition(mdp::PedCarMDP)
     for ped in ped_states 
         for a in ped_action_space
             acts_ped = SVector(ConstantSpeedDawdling(0., 0.), ConstantSpeedDawdling(1., 0.), ConstantSpeedDawdling(2., 0.))
-            ped_states = Vector{VehicleState}()
-            ped_probs = Vector{Float64}()
+            ped_states = Vector{VehicleState}(undef, 0)
+            ped_probs = Vector{Float64}(undef, 0)
             k = 1
             p_a = 1/length(acts_ped) # uniform
             for act in acts_ped
                 ped_p = propagate(ped, act, env.roadway, mdp.ΔT)
                 itp_ped_ps, itp_ped_weights = ped_interpolation(mdp, mdp._ped_grid, ped_p)
                 for (j, ped_pss) in enumerate(itp_ped_ps)
-                    index_itp_state = find(x -> x==ped_pss, ped_states)
+                    index_itp_state = findall(x -> x==ped_pss, ped_states)
                     if !(itp_ped_weights[j] ≈ 0.)
                         if isempty(index_itp_state)
                             push!(ped_states, ped_pss)
                             push!(ped_probs, itp_ped_weights[j]*p_a)
                         else
-                            ped_probs[index_itp_state] += itp_ped_weights[j]*p_a
+                            ped_probs[index_itp_state] .+= itp_ped_weights[j]*p_a
                         end
                     end
                 end
@@ -171,7 +171,7 @@ function car_interpolation(mdp::PedCarMDP, grids::Dict{LaneTag, RectangleGrid{2}
         # interpolate car_p in discrete space
         itp_car_ps, itp_car_weights = interpolate_state(mdp, car)
         @assert length(itp_car_ps) <= N_itp
-        states_ = Vector{VehicleState}(N_itp)
+        states_ = Vector{VehicleState}(undef, N_itp)
         fill!(states_, mdp.off_grid)
         probs_ = zeros(N_itp)
         # can have a varying number of states (between 1 and 4)
@@ -200,7 +200,7 @@ function ped_interpolation(mdp::PedCarMDP, grids::Dict{LaneTag, RectangleGrid{3}
         # interpolate ped_p in discrete space 
         itp_ped_ps, itp_ped_weights = interpolate_pedestrian(mdp, ped)
         @assert length(itp_ped_ps) <= N_itp
-        states_ = Vector{VehicleState}(N_itp)
+        states_ = Vector{VehicleState}(undef, N_itp)
         fill!(states_, mdp.off_grid)
         probs_ = zeros(N_itp)
         # can have a varying number of states (between 1 and 4)
@@ -226,8 +226,8 @@ function car_reset(mdp::PedCarMDP, min_speed::Float64 = 6.0)
     for route in routes 
         N_states += length(v_space)
     end
-    car_states = Vector{VehicleState}(N_states)
-    start_routes = Vector{SVector{2, LaneTag}}(N_states)
+    car_states = Vector{VehicleState}(undef, N_states)
+    start_routes = Vector{SVector{2, LaneTag}}(undef, N_states)
     i = 1
     for route in routes
         lane = route[1]
@@ -241,7 +241,7 @@ function car_reset(mdp::PedCarMDP, min_speed::Float64 = 6.0)
     start_routes[end] = OFF_ROUTE
     car_probs = ones(N_states)
     car_probs[end] = 1-mdp.car_birth
-    car_probs[1:end-1] = mdp.car_birth/(length(car_states)-1)
+    car_probs[1:end-1] .= mdp.car_birth/(length(car_states)-1)
     normalize!(car_probs, 1)
     return SparseCat(collect(zip(car_states, start_routes)), car_probs)
 end
@@ -252,7 +252,7 @@ function ped_reset(mdp::PedCarMDP)
     lanes = get_ped_lanes(mdp.env)
     v_space = 1.0:mdp.vel_ped_res:2.0
     N_states = length(lanes)*length(v_space)*n_headings
-    ped_states = Vector{VehicleState}(N_states)
+    ped_states = Vector{VehicleState}(undef, N_states)
     i = 1
     for lane in lanes
         dlane = get_discretized_lane(lane, mdp.env.roadway, mdp.pos_res)
@@ -266,7 +266,7 @@ function ped_reset(mdp::PedCarMDP)
     ped_states[end] = mdp.off_grid
     ped_probs = ones(N_states)
     ped_probs[end] = 1-mdp.ped_birth
-    ped_probs[1:end-1] = mdp.ped_birth/(length(ped_states)-1)
+    ped_probs[1:end-1] .= mdp.ped_birth/(length(ped_states)-1)
     normalize!(ped_probs, 1)
     return SparseCat(ped_states, ped_probs)
 end
@@ -314,16 +314,16 @@ function initial_ped_state(mdp::PedCarMDP, rng::AbstractRNG)
     return rand(rng, init_dist)
 end
 
-function POMDPs.initial_state(mdp::PedCarMDP, rng::AbstractRNG)
-    return rand(rng, initial_state_distribution(mdp))
+function POMDPs.initialstate(mdp::PedCarMDP, rng::AbstractRNG)
+    return rand(rng, initialstate_distribution(mdp))
 end
 
 
-function POMDPs.initial_state_distribution(mdp::PedCarMDP)
+function POMDPs.initialstate_distribution(mdp::PedCarMDP)
     ego = initial_ego_state(mdp)
     init_car_states, init_car_routes = initial_car_state_distribution(mdp)
     init_ped_dist = initial_ped_state_distribution(mdp) 
-    init_states = Vector{PedCarMDPState}()
+    init_states = Vector{PedCarMDPState}(undef, 0)
     for i=1:length(init_car_states)
         for j=1:length(init_ped_dist.vals)
             ped = init_ped_dist.vals[j]

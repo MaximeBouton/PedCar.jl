@@ -11,13 +11,15 @@ This problem involves three agents:
 using StaticArrays
 using GridInterpolations
 using POMDPs
-using POMDPToolbox
+using POMDPModelTools
 using ParticleFilters
 using AutomotiveDrivingModels
 using AutoViz
 using AutomotivePOMDPs
 using AutomotiveSensors
 using Parameters
+using Random
+using LinearAlgebra
 
 export
     PedCarMDP,

@@ -1,7 +1,6 @@
 using StaticArrays
 using GridInterpolations
 using POMDPs
-using POMDPToolbox
 using AutomotiveDrivingModels
 using AutomotivePOMDPs
 using PedCar

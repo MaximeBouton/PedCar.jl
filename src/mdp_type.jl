@@ -34,7 +34,7 @@ end
 Base.hash(veh::VehicleState, h::UInt) = hash(veh.posF, hash(veh.v, h))
 
 # copy b to a
-function Base.copy!(a::PedCarMDPState, b::PedCarMDPState)
+function Base.copyto!(a::PedCarMDPState, b::PedCarMDPState)
     a.crash = b.crash
     a.ego = b.ego
     a.ped = b.ped

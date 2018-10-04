@@ -1,7 +1,7 @@
 POMDPs.actions(mdp::PedCarMDP) = [PedCarMDPAction(-4.0), PedCarMDPAction(-2.0), PedCarMDPAction(0.0), PedCarMDPAction(2.0)]
 POMDPs.n_actions(mdp::PedCarMDP) = 4
 
-function POMDPs.action_index(mdp::PedCarMDP, action::PedCarMDPAction)
+function POMDPs.actionindex(mdp::PedCarMDP, action::PedCarMDPAction)
     if action.acc == -4.0
         return 1
     elseif action.acc == -2.0
@@ -54,7 +54,7 @@ function POMDPs.n_states(mdp::PedCarMDP)
 end
 
 
-function POMDPs.state_index(mdp::PedCarMDP, s::PedCarMDPState)
+function POMDPs.stateindex(mdp::PedCarMDP, s::PedCarMDPState)
     n_ego = n_ego_states(mdp.env, mdp.pos_res, mdp.vel_res)
     n_ped = n_ped_states(mdp.env, mdp.pos_res, mdp.vel_ped_res)
     routes = get_car_routes(mdp.env)
@@ -81,7 +81,7 @@ function POMDPs.state_index(mdp::PedCarMDP, s::PedCarMDPState)
         for route in routes
             si += n_ego * (n_ped + 1) * n_car_states(mdp.env, route, mdp.pos_res, mdp.vel_res)
         end
-        si += sub2ind((n_ped + 1, n_ego), ped_i, ego_i)
+        si += LinearIndices((n_ped + 1, n_ego))[ped_i, ego_i]
     else
         n_car = n_car_states(mdp.env, find_route(mdp.env, s.route), mdp.pos_res, mdp.vel_res)
         # step 2: find route_index
@@ -93,8 +93,8 @@ function POMDPs.state_index(mdp::PedCarMDP, s::PedCarMDPState)
         end
         # step 3: find car_index in car states
         car_i = car_state_index(mdp.env, s.car, find_route(mdp.env, s.route), mdp.pos_res, mdp.vel_res)
-        # sub2ind magic
-        si = sub2ind((n_car, n_ped + 1, n_ego), car_i, ped_i, ego_i)
+        # linear/cartesian magic
+        si = LinearIndices((n_car, n_ped + 1, n_ego))[car_i, ped_i, ego_i]
 
         for i=2:route_i
             size_r = n_ego * (n_ped + 1) * n_car_states(mdp.env, routes[i-1], mdp.pos_res, mdp.vel_res)
@@ -128,7 +128,7 @@ function ind2state(mdp::PedCarMDP, si::Int64)
         si_ = si - ns # shift by all the states that were added before
         car = mdp.off_grid
         # retrieve ped and ego
-        ped_i, ego_i = ind2sub((n_ped + 1, n_ego), si_)
+        ped_i, ego_i = Tuple(CartesianIndices((n_ped + 1, n_ego))[si_])
         ego = ind2ego(mdp.env, ego_i, mdp.pos_res, mdp.vel_res)
         if ped_i > n_ped
             ped = mdp.off_grid
@@ -142,8 +142,8 @@ function ind2state(mdp::PedCarMDP, si::Int64)
         route = routes[route_ind]
         sroute = SVector{2, LaneTag}(route[1], route[end])
         n_cars = n_car_states(mdp.env, route, mdp.pos_res, mdp.vel_res)
-        # use ind2sub magic
-        car_i, ped_i, ego_i = ind2sub((n_cars, n_ped + 1, n_ego), si_)
+        # use cartesian/linear magic
+        car_i, ped_i, ego_i = Tuple(CartesianIndices((n_cars, n_ped + 1, n_ego))[si_])
         car = ind2car(mdp.env, car_i, route, mdp.pos_res, mdp.vel_res)
         ego = ind2ego(mdp.env, ego_i, mdp.pos_res, mdp.vel_res)
         if ped_i > n_ped
