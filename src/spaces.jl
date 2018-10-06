@@ -59,12 +59,12 @@ function POMDPs.stateindex(mdp::PedCarMDP, s::PedCarMDPState)
     n_ped = n_ped_states(mdp.env, mdp.pos_res, mdp.vel_ped_res)
     routes = get_car_routes(mdp.env)
     # step 1: find ego_index
-    ego_i = ego_state_index(mdp.env, s.ego, mdp.pos_res, mdp.vel_res)
+    ego_i = ego_stateindex(mdp.env, s.ego, mdp.pos_res, mdp.vel_res)
     # step 2: find ped index 
     if s.ped == mdp.off_grid
         ped_i = n_ped + 1
     else
-        ped_i = ped_state_index(mdp.env, s.ped, mdp.pos_res, mdp.vel_ped_res)
+        ped_i = ped_stateindex(mdp.env, s.ped, mdp.pos_res, mdp.vel_ped_res)
     end
 
     # step 3 find route index 
@@ -92,7 +92,7 @@ function POMDPs.stateindex(mdp::PedCarMDP, s::PedCarMDPState)
             end
         end
         # step 3: find car_index in car states
-        car_i = car_state_index(mdp.env, s.car, find_route(mdp.env, s.route), mdp.pos_res, mdp.vel_res)
+        car_i = car_stateindex(mdp.env, s.car, find_route(mdp.env, s.route), mdp.pos_res, mdp.vel_res)
         # linear/cartesian magic
         si = LinearIndices((n_car, n_ped + 1, n_ego))[car_i, ped_i, ego_i]
 
