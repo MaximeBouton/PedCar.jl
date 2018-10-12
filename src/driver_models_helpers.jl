@@ -49,12 +49,17 @@ function AutomotiveDrivingModels.observe!(model::TTCIntersectionDriver,
     model.priority = ttc_check(model, car, ego, roadway)
     passed = has_passed(model, car, ego, roadway)
     a_lon_idm = model.navigator.a
-    if !model.priority && !passed && engaged(model, car, ego, roadway) 
+    right_of_way = model.priorities[(model.navigator.route[1].tag,model.navigator.route[end].tag)]
+    if !model.priority && !passed && engaged(model, car, ego, roadway) # emergency break
         a_lon = -model.navigator.d_max
     elseif !model.priority && !passed
         a_lon = min(a_lon_idm, AutomotivePOMDPs.stop_at_end(model, car, roadway))
     else
         a_lon = a_lon_idm
+    end
+    # to get out of the Emergency break 
+    if !model.priority && !passed && engaged(model, car, ego, roadway) && right_of_way
+        a_lon = a_lon_idm 
     end
     model.a = LonAccelDirection(a_lon, model.navigator.dir)    
 end
@@ -90,14 +95,6 @@ function AutomotiveDrivingModels.observe!(model::RouteFollowingIDM,
     Δv = model.v_des - car.v
     acc = Δv*model.k_spd
     model.a = clamp(acc, -model.d_max, model.a_max)
-    # fore = is_neighbor_fore_along_lane(car, ego, roadway)
-    # v_car = car.v
-    # if fore.ind != 0
-    #     headway, v_oth = fore.Δs, car.v
-    # else
-    #     headway, v_oth = NaN, NaN
-    # end
-    # track_longitudinal!(model, v_car, v_oth, headway)
     cur_lane = get_lane(roadway, car)
     set_direction!(model, cur_lane, roadway)    
     return model
