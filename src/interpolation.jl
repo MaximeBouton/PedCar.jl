@@ -107,6 +107,10 @@ function AutomotivePOMDPs.interpolate_state(mdp::PedCarMDP, s::PedCarMDPState)
 end
 
 function AutomotivePOMDPs.get_mdp_state(mdp::PedCarMDP, pomdp::UrbanPOMDP, s::Scene, ped_id, car_id)
+    return AutomotivePOMDPs.get_mdp_state(mdp, pomdp.models, s, ped_id, car_id)
+end
+
+function AutomotivePOMDPs.get_mdp_state(mdp::PedCarMDP, models::Dict{Int64, DriverModel}, s::Scene, ped_id, car_id)
     car_i = findfirst(car_id, s)
     car = Vehicle(mdp.off_grid, mdp.car_type, car_id)
     if car_i != 0
@@ -120,9 +124,9 @@ function AutomotivePOMDPs.get_mdp_state(mdp::PedCarMDP, pomdp::UrbanPOMDP, s::Sc
     ego = get_ego(s)
     # find route 
     sroute = nothing
-    if haskey(pomdp.models, car_id) && car_i != 0
+    if haskey(models, car_id) && car_i != 0
         # find the exact route from the list of routes
-        curr_route = [l.tag for l in pomdp.models[car_id].navigator.route]
+        curr_route = [l.tag for l in models[car_id].navigator.route]
         for route in get_car_routes(mdp.env)
             tags = intersect(Set(curr_route), Set(route))
             if length(tags) >= 2
