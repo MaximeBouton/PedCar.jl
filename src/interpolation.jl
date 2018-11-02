@@ -142,7 +142,7 @@ function AutomotivePOMDPs.get_mdp_state(mdp::PedCarMDP, models::Dict{Int64, Driv
         sroute = OFF_ROUTE
     end
     e_state = VehicleState(ego.state.posG, car_roadway(mdp.env), ego.state.v)
-    p_state = VehicleState(ped.state.posG, ped.state.posF, ped.state.v)
+    p_state = VehicleState(ped.state.posG, mdp.env.ped_roadway, ped.state.v)
     c_state = VehicleState(car.state.posG, car_roadway(mdp.env), car.state.v)
     return PedCarMDPState(is_colliding(ego, car), e_state, p_state, c_state, sroute)
 end

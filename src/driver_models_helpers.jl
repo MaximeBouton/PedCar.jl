@@ -41,27 +41,61 @@ function AutomotiveDrivingModels.observe!(model::UrbanDriver,
 end
 
 
+# function AutomotiveDrivingModels.observe!(model::TTCIntersectionDriver, 
+#                                           ego::VehicleState, 
+#                                           car::VehicleState, 
+#                                           roadway::Roadway)
+
+#     model.priority = ttc_check(model, car, ego, roadway)
+#     passed = has_passed(model, car, ego, roadway)
+#     a_lon_idm = model.navigator.a
+#     right_of_way = model.priorities[(model.navigator.route[1].tag,model.navigator.route[end].tag)]
+#     if !model.priority && !passed && engaged(model, car, ego, roadway) # emergency break
+#         a_lon = -model.navigator.d_max
+#     elseif !model.priority && !passed
+#         a_lon = min(a_lon_idm, AutomotivePOMDPs.stop_at_end(model, car, roadway))
+#     else
+#         a_lon = a_lon_idm
+#     end
+#     # to get out of the Emergency break 
+#     if !model.priority && !passed && engaged(model, car, ego, roadway) && right_of_way
+#         a_lon = a_lon_idm 
+#     end
+#     model.a = LonAccelDirection(a_lon, model.navigator.dir)    
+# end
+
 function AutomotiveDrivingModels.observe!(model::TTCIntersectionDriver, 
                                           ego::VehicleState, 
                                           car::VehicleState, 
                                           roadway::Roadway)
-
-    model.priority = ttc_check(model, car, ego, roadway)
-    passed = has_passed(model, car, ego, roadway)
     a_lon_idm = model.navigator.a
+    passed =  has_passed(model, car, ego, roadway)
+    is_engaged = engaged(model, car, ego, roadway)
     right_of_way = model.priorities[(model.navigator.route[1].tag,model.navigator.route[end].tag)]
-    if !model.priority && !passed && engaged(model, car, ego, roadway) # emergency break
-        a_lon = -model.navigator.d_max
-    elseif !model.priority && !passed
-        a_lon = min(a_lon_idm, AutomotivePOMDPs.stop_at_end(model, car, roadway))
-    else
-        a_lon = a_lon_idm
-    end
-    # to get out of the Emergency break 
-    if !model.priority && !passed && engaged(model, car, ego, roadway) && right_of_way
+    is_clogged = is_intersection_clogged(model, car, ego, roadway)
+    ttc = ttc_check(model, car, ego, roadway)
+     
+    if isempty(model.intersection) || passed 
         a_lon = a_lon_idm 
+    elseif !passed 
+        if right_of_way
+            if is_clogged && !passed && is_engaged && !model.stop && !isapprox(car.v, 0.)
+                # println("Vehicle $egoid : emergency break")
+                a_lon = -model.navigator.d_max
+            else
+                a_lon = a_lon_idm
+            end
+        else # left turn
+            if !ttc && !is_engaged  # before left turn
+                a_lon = min(a_lon_idm, AutomotivePOMDPs.stop_at_end(model, car, roadway))
+            elseif is_clogged && !passed && is_engaged && !isapprox(car.v, 0.) #!ttc && !passed && is_engaged || (is_clogged && is_engaged)
+                # println("Vehicle $egoid : emergency break")
+                a_lon = -model.navigator.d_max
+            elseif ttc 
+                a_lon = a_lon_idm 
+            end
+        end
     end
-    model.a = LonAccelDirection(a_lon, model.navigator.dir)    
 end
 
 function AutomotiveDrivingModels.observe!(model::CrosswalkDriver, 
@@ -136,6 +170,15 @@ function ttc_check(model::TTCIntersectionDriver, ego::VehicleState, car::Vehicle
 
 end
 
+function is_intersection_clogged(model::TTCIntersectionDriver, ego::VehicleState, car::VehicleState, roadway::Roadway)
+    inter_width=5.0
+    posF = car.posF
+    int_x, int_y, int_θ = model.intersection_pos
+    Δ = (model.intersection_pos.x - car.posG.x)^2 + (model.intersection_pos.y - car.posG.y)^2
+    return Δ < inter_width^2 # vehicle is in the middle
+end
+
+
 function has_passed(model::TTCIntersectionDriver, ego::VehicleState, car::VehicleState, roadway::Roadway)
     lane = get_lane(roadway, ego)
     inter_to_car = ego.posG - model.intersection_pos
@@ -145,11 +188,11 @@ function has_passed(model::TTCIntersectionDriver, ego::VehicleState, car::Vehicl
 end
 
 function engaged(model::TTCIntersectionDriver, ego::VehicleState, car::VehicleState, roadway::Roadway)
-    lane = get_lane(roadway, ego)
-    if isempty(lane.entrances)
-        return false 
+    inter_width = 7.5 #todo parameterized
+    if normsquared(VecE2(model.intersection_pos - ego.posG)) < inter_width^2
+        return true 
     end
-    return true 
+    return false 
 end
 
 function is_neighbor_fore_along_lane(ego::VehicleState, car::VehicleState, roadway::Roadway, ego_def::VehicleDef = VehicleDef())
