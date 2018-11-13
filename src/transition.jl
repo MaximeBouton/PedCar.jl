@@ -8,6 +8,8 @@ function POMDPs.transition(mdp::PedCarMDP, s::PedCarMDPState, a::PedCarMDPAction
         a_lon = round(mdp.car_models[s.route].a.a_lon)
         if a_lon == 0.0; a_lon = 0.0; end # in case it rounds to -0.0
         act_car = LonAccelDirection(a_lon, mdp.car_models[s.route].a.direction)
+        # println("car takes ", a_lon)
+        # println("model said ", mdp.car_models[s.route].a.a_lon)
     end
     car_dist = mdp._car_transition_dict[(s.car, s.route, act_car)]
     ped_dist = mdp._ped_transition_dict[(s.ped, ConstantSpeedDawdling(0., 0))]

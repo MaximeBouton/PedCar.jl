@@ -70,7 +70,7 @@ function AutomotivePOMDPs.interpolate_pedestrian(mdp::PedCarMDP, state::VehicleS
     end
     lane = get_lane(mdp.env.ped_roadway, state)
     grid = mdp._ped_grid[lane.tag]
-    real_state = SVector{3, Float64}(state.posF.s, state.v, state.posF.ϕ)
+    real_state = SVector{3, Float64}(state.posF.s, state.v, mod2pi(state.posF.ϕ))
     idx, weights = interpolants(grid, real_state)
     n_pts = length(idx)
     states = Vector{VehicleState}(undef, n_pts)
@@ -111,12 +111,13 @@ function AutomotivePOMDPs.get_mdp_state(mdp::PedCarMDP, pomdp::UrbanPOMDP, s::Sc
 end
 
 function AutomotivePOMDPs.get_mdp_state(mdp::PedCarMDP, models::Dict{Int64, DriverModel}, s::Scene, ped_id, car_id)
-    car_i = findfirst(car_id, s)
+    @assert length(s) <= 3
+    car_i = findfirst(CAR_ID, s)
     car = Vehicle(mdp.off_grid, mdp.car_type, car_id)
     if car_i != 0
         car = s[car_i]
     end
-    ped_i = findfirst(ped_id, s)
+    ped_i = findfirst(PED_ID, s)
     ped = Vehicle(mdp.off_grid, mdp.ped_type, ped_id)
     if ped_i != 0
         ped = s[ped_i]
@@ -141,8 +142,15 @@ function AutomotivePOMDPs.get_mdp_state(mdp::PedCarMDP, models::Dict{Int64, Driv
     else 
         sroute = OFF_ROUTE
     end
+    if isapprox(ped.state.posG.θ, float(pi))
+        posG = ped.state.posG
+        lane = mdp.env.ped_roadway[LaneTag(19,1)]
+        posF = Frenet(proj(posG, lane, mdp.env.roadway, move_along_curves=false), mdp.env.roadway)
+        p_state = VehicleState(posG, posF, ped.state.v)
+    else
+        p_state = VehicleState(ped.state.posG, mdp.env.ped_roadway, ped.state.v)
+    end
     e_state = VehicleState(ego.state.posG, car_roadway(mdp.env), ego.state.v)
-    p_state = VehicleState(ped.state.posG, mdp.env.ped_roadway, ped.state.v)
     c_state = VehicleState(car.state.posG, car_roadway(mdp.env), car.state.v)
     return PedCarMDPState(is_colliding(ego, car), e_state, p_state, c_state, sroute)
 end

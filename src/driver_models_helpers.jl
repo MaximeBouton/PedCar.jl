@@ -35,6 +35,7 @@ function AutomotiveDrivingModels.observe!(model::UrbanDriver,
     end
     a_lon_crosswalks = minimum([driver.a.a_lon for driver in model.crosswalk_drivers])
     a_lon = min(model.intersection_driver.a.a_lon, min(a_lon_crosswalks, model.navigator.a))
+    # println("UrbanDriver says ", a_lon)
 
     model.a = LonAccelDirection(a_lon, model.navigator.dir)
     return model.a
@@ -78,7 +79,7 @@ function AutomotiveDrivingModels.observe!(model::TTCIntersectionDriver,
     if isempty(model.intersection) || passed 
         a_lon = a_lon_idm 
     elseif !passed 
-        if right_of_way
+        if right_of_way #&& !is_clogged
             if is_clogged && !passed && is_engaged && !model.stop && !isapprox(car.v, 0.)
                 # println("Vehicle $egoid : emergency break")
                 a_lon = -model.navigator.d_max
@@ -88,6 +89,7 @@ function AutomotiveDrivingModels.observe!(model::TTCIntersectionDriver,
         else # left turn
             if !ttc && !is_engaged  # before left turn
                 a_lon = min(a_lon_idm, AutomotivePOMDPs.stop_at_end(model, car, roadway))
+                # println("!ttc && !engaged: ", a_lon)
             elseif is_clogged && !passed && is_engaged && !isapprox(car.v, 0.) #!ttc && !passed && is_engaged || (is_clogged && is_engaged)
                 # println("Vehicle $egoid : emergency break")
                 a_lon = -model.navigator.d_max
@@ -96,6 +98,7 @@ function AutomotiveDrivingModels.observe!(model::TTCIntersectionDriver,
             end
         end
     end
+    model.a = LonAccelDirection(a_lon, model.navigator.dir)
 end
 
 function AutomotiveDrivingModels.observe!(model::CrosswalkDriver, 
