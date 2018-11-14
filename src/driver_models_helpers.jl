@@ -75,7 +75,7 @@ function AutomotiveDrivingModels.observe!(model::TTCIntersectionDriver,
     right_of_way = model.priorities[(model.navigator.route[1].tag,model.navigator.route[end].tag)]
     is_clogged = is_intersection_clogged(model, car, ego, roadway)
     ttc = ttc_check(model, car, ego, roadway)
-     
+    a_lon = a_lon_idm 
     if isempty(model.intersection) || passed 
         a_lon = a_lon_idm 
     elseif !passed 
