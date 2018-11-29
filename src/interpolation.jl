@@ -70,7 +70,7 @@ function AutomotivePOMDPs.interpolate_pedestrian(mdp::PedCarMDP, state::VehicleS
     end
     lane = get_lane(mdp.env.ped_roadway, state)
     grid = mdp._ped_grid[lane.tag]
-    real_state = SVector{3, Float64}(state.posF.s, state.v, mod2pi(state.posF.ϕ))
+    real_state = SVector{3, Float64}(state.posF.s, state.v, abs(state.posF.ϕ))
     idx, weights = interpolants(grid, real_state)
     n_pts = length(idx)
     states = Vector{VehicleState}(undef, n_pts)
