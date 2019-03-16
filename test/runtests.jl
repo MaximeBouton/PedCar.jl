@@ -13,7 +13,8 @@ using ProgressMeter
                      stop_line = 22.0)
     env = UrbanEnv(params=params)
     mdp = PedCarMDP(env=env, pos_res=4.0, vel_res=3., ped_birth=0.3, car_birth=0.3)
-
+    state_space = states(mdp)
+    @test length(state_space) == n_states(mdp)
 end
 
 include("test_convert.jl")
