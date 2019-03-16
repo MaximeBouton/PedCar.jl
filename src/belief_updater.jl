@@ -24,7 +24,7 @@ end
 function ParticleFilters.obs_weight(model::CarStateEstimator, s::CarState, sp::CarState, o::Vector{Vehicle})
     car, route = sp
     car_ind = findfirst(x->x.id==model.id, o)
-    if car_ind == 0
+    if car_ind == nothing
         obs = nothing
     else
         obs = o[car_ind].state
@@ -59,7 +59,7 @@ end
 
 function ParticleFilters.obs_weight(model::PedStateEstimator, ped::VehicleState, pedp::VehicleState, o::Vector{Vehicle})
     ped_ind = findfirst(x->x.id==model.id, o)
-    if ped_ind == 0
+    if ped_ind == nothing
         obs = nothing
     else
         obs = o[ped_ind].state

@@ -114,18 +114,18 @@ function AutomotivePOMDPs.get_mdp_state(mdp::PedCarMDP, models::Dict{Int64, Driv
     @assert length(s) <= 3
     car_i = findfirst(CAR_ID, s)
     car = Vehicle(mdp.off_grid, mdp.car_type, car_id)
-    if car_i != 0
+    if car_i != nothing
         car = s[car_i]
     end
     ped_i = findfirst(PED_ID, s)
     ped = Vehicle(mdp.off_grid, mdp.ped_type, ped_id)
-    if ped_i != 0
+    if ped_i != nothing
         ped = s[ped_i]
     end
     ego = get_ego(s)
     # find route 
     sroute = nothing
-    if haskey(models, car_id) && car_i != 0
+    if haskey(models, car_id) && car_i != nothing
         # find the exact route from the list of routes
         curr_route = [l.tag for l in models[car_id].navigator.route]
         for route in get_car_routes(mdp.env)
