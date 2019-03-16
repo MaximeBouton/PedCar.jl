@@ -3,7 +3,7 @@ function test_convert(mdp::PedCarMDP)
         s = ind2state(mdp, i)
         svec = convert_s(Vector{Float64}, s, mdp)
         s_reconstructed = convert_s(PedCarMDPState, svec, mdp)
-        if s_reconstructed ≈ s 
+        if !isapprox(s_reconstructed, s)
             @debug("index $i, state $s")
             @debug("reconstructed state: $s_reconstructed")
             return false 
