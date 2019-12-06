@@ -1,7 +1,7 @@
 name = "PedCar"
 uuid = "90cf7f26-d5c7-593d-a0e1-4a8367407571"
 repo = "https://github.com/MaximeBouton/PedCar.jl"
-version = "0.0.0"
+version = "0.1.0"
 
 [deps]
 AutoUrban = "1385418a-9289-5a49-ab93-843b508de4cb"
